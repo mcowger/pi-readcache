@@ -24,7 +24,10 @@ export const DEFAULT_EXCLUDED_PATH_PATTERNS = [
 	".netrc",
 ] as const;
 
-export const READCACHE_ROOT_DIR = ".pi/readcache";
+import { getReadcacheCacheDir } from "./pi-config.js";
+
+// ...
+export const READCACHE_ROOT_DIR = await getReadcacheCacheDir();
 export const READCACHE_OBJECTS_DIR = `${READCACHE_ROOT_DIR}/objects`;
 export const READCACHE_TMP_DIR = `${READCACHE_ROOT_DIR}/tmp`;
 export const READCACHE_OBJECT_MAX_AGE_MS = 24 * 60 * 60 * 1000;

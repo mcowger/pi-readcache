@@ -46,6 +46,20 @@ pi install git:https://github.com/Gurpartap/pi-readcache
 
 After installation, you can use pi normally. If pi is already running when you install or update, run `/reload` in that session.
 
+### Custom Cache Storage
+
+By default, `pi-readcache` stores its cache in `.pi/readcache` within your project root.
+
+To override this, add a `readcacheDir` key to your `~/.pi/agent/settings.json` file:
+
+```json
+{
+  "readcacheDir": "/path/to/your/custom/cache"
+}
+```
+
+The extension will respect this path and create the necessary subdirectories there.
+
 ## Day-to-day usage
 
 | Action | Command | Expected result |
