@@ -48,4 +48,35 @@ describe("getReadcacheCacheDir", () => {
 		const dir = await getReadcacheCacheDir();
 		expect(dir).toBe("/env/cache");
 	});
+
+	it("expands environment variables with $VAR syntax", async () => {
+		process.env.TMPDIR = "/tmp/testdir";
+		vi.mocked(readFile).mockResolvedValue(JSON.stringify({ readcacheDir: "$TMPDIR/pi-readcache" }));
+		const dir = await getReadcacheCacheDir();
+		expect(dir).toBe("/tmp/testdir/pi-readcache");
+	});
+
+	it("expands environment variables with ${VAR} syntax", async () => {
+		process.env.TMPDIR = "/tmp/testdir";
+		vi.mocked(readFile).mockResolvedValue(JSON.stringify({ readcacheDir: "${TMPDIR}/pi-readcache" }));
+		const dir = await getReadcacheCacheDir();
+		expect(dir).toBe("/tmp/testdir/pi-readcache");
+	});
+
+	it("leaves undefined environment variables unchanged", async () => {
+		delete process.env.UNDEFINED_VAR;
+		vi.mocked(readFile).mockResolvedValue(JSON.stringify({ readcacheDir: "$UNDEFINED_VAR/cache" }));
+		const dir = await getReadcacheCacheDir();
+		expect(dir).toBe("$UNDEFINED_VAR/cache");
+	});
+
+	it("expands multiple environment variables in path", async () => {
+		process.env.HOME = "/Users/testuser";
+		process.env.CACHE_SUBDIR = "mycache";
+		vi.mocked(readFile).mockResolvedValue(
+			JSON.stringify({ readcacheDir: "$HOME/.cache/$CACHE_SUBDIR" }),
+		);
+		const dir = await getReadcacheCacheDir();
+		expect(dir).toBe("/Users/testuser/.cache/mycache");
+	});
 });

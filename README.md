@@ -58,7 +58,23 @@ To override this, add a `readcacheDir` key to your `~/.pi/agent/settings.json` f
 }
 ```
 
-The extension will respect this path and create the necessary subdirectories there.
+Environment variables are supported using `$VAR` or `${VAR}` syntax:
+
+```json
+{
+  "readcacheDir": "$TMPDIR/pi-readcache"
+}
+```
+
+This is useful for temporary caches that should be cleared on reboot:
+
+```json
+{
+  "readcacheDir": "${TMPDIR}/pi-readcache"
+}
+```
+
+The extension will expand environment variables at runtime and create the necessary subdirectories.
 
 ## Day-to-day usage
 
