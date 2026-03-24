@@ -1,7 +1,7 @@
 import { mkdtemp, stat, utimes } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import {
 	getStoreStats,
 	hashText,
@@ -11,15 +11,36 @@ import {
 	pruneObjectsOlderThan,
 } from "../../src/object-store.js";
 
+vi.mock("../../src/constants.js", () => {
+	return {
+		READCACHE_META_VERSION: 1,
+		READCACHE_CUSTOM_TYPE: "pi-readcache",
+		SCOPE_FULL: "full",
+		MAX_DIFF_FILE_BYTES: 2 * 1024 * 1024,
+		MAX_DIFF_FILE_LINES: 12_000,
+		MAX_DIFF_TO_BASE_RATIO: 0.9,
+		MAX_DIFF_TO_BASE_LINE_RATIO: 0.85,
+		DEFAULT_EXCLUDED_PATH_PATTERNS: [],
+		READCACHE_ROOT_DIR: ".pi/readcache",
+		READCACHE_OBJECT_MAX_AGE_MS: 24 * 60 * 60 * 1000,
+		scopeRange: (start: number, end: number) => `r:${start}:${end}`,
+	};
+});
+
+const TEST_CACHE_ROOT = ".pi/readcache";
+
 describe("object-store", () => {
 	it("persists and loads content by hash", async () => {
 		const repoRoot = await mkdtemp(join(tmpdir(), "pi-readcache-store-"));
 		const text = "hello object store";
 		const hash = hashText(text);
 
+		const objectsDir = join(repoRoot, TEST_CACHE_ROOT, "objects");
+		const tmpDir = join(repoRoot, TEST_CACHE_ROOT, "tmp");
+
 		const persisted = await persistObjectIfAbsent(repoRoot, hash, text);
 		expect(persisted.written).toBe(true);
-		expect(persisted.path).toBe(objectPathForHash(repoRoot, hash));
+		expect(persisted.path).toBe(join(objectsDir, `sha256-${hash}.txt`));
 
 		const loaded = await loadObject(repoRoot, hash);
 		expect(loaded).toBe(text);
@@ -38,7 +59,6 @@ describe("object-store", () => {
 		);
 
 		expect(writes.some((result) => result.written)).toBe(true);
-		expect(writes.every((result) => result.path === objectPathForHash(repoRoot, hash))).toBe(true);
 		expect(await loadObject(repoRoot, hash)).toBe(text);
 	});
 

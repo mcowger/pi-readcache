@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { access, mkdir, open, readdir, readFile, rename, stat, unlink } from "node:fs/promises";
-import { join } from "node:path";
-import { READCACHE_OBJECT_MAX_AGE_MS, READCACHE_OBJECTS_DIR, READCACHE_TMP_DIR } from "./constants.js";
+import { isAbsolute, join } from "node:path";
+import { READCACHE_OBJECT_MAX_AGE_MS, READCACHE_ROOT_DIR } from "./constants.js";
 
 const HASH_HEX_RE = /^[a-f0-9]{64}$/;
 
@@ -47,9 +47,10 @@ export function hashText(text: string): string {
 }
 
 export function getStorePaths(repoRoot: string): ObjectStorePaths {
+	const cacheRoot = isAbsolute(READCACHE_ROOT_DIR) ? READCACHE_ROOT_DIR : join(repoRoot, READCACHE_ROOT_DIR);
 	return {
-		objectsDir: join(repoRoot, READCACHE_OBJECTS_DIR),
-		tmpDir: join(repoRoot, READCACHE_TMP_DIR),
+		objectsDir: join(cacheRoot, "objects"),
+		tmpDir: join(cacheRoot, "tmp"),
 	};
 }
 
